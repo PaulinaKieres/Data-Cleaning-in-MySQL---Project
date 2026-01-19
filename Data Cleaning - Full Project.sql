@@ -1,20 +1,20 @@
--- Data Cleaning
+-- Data Cleaning Project (Junior)
+-- Link to raw data "Layoffs.csv" from my google drive:
+-- https://drive.google.com/file/d/1d1LAfdS_ebalFSN3nv3Vkciq2YTy9oYl/view?usp=sharing
 
--- it's basically where you get it in more usable format so you fix a lot of the issuues in 
--- raw data tahat when you start creating visualizations or start using it in your product
--- that the data is actualy useful and there aren't a lot of issues with it.
--- nie powinienś pracowac on raw datas. Zazwyczaj musisz zorbic duplikat daty i jego będziesz zmieniać.
 
 select *
 from layoffs;
 
--- Co musimy zorbić
+-- What I plan to do
 -- 1. Remove Duplicates
 -- 2. Standardize the Data
--- 3. Null Values or blank values
--- 4. Remove Any Columns or rows
+-- 3. Null vlues or blank values
+-- 4. Remove any columns or rows that are no use for gathering information
 
--- Tworzymy zapasową kopię danych na której będziemy pracować
+
+
+-- Backup copy of the raw data.
 
 CREATE TABLE layoffs_staging
 LIKE layoffs;
@@ -26,8 +26,10 @@ INSERT layoffs_staging
 SELECT *
 FROM layoffs;
 
--- muismy pozbyć się powtórzeń. Wykorzystamy row column i poszukamy duplikatów
 
+
+
+-- 1. Remove Duplicates.
 
 SELECT *,
 ROW_NUMBER() OVER(
@@ -78,7 +80,7 @@ FROM layoffs_staging2
 ;
 
 
--- Standardizing data
+-- 2. Standardize the Data
 
 SELECT company, TRIM(company)
 FROM layoffs_staging2;
@@ -112,7 +114,7 @@ WHERE country LIKE 'United States%';
 SELECT *
 FROM layoffs_staging2;
 
--- Musimy zmienić format dla daty który teraz jest jako text
+-- I need to change the format for the date which is now "text"
 
 SELECT `date`,
 STR_TO_DATE(`date`, '%m/%d/%Y')
@@ -121,13 +123,13 @@ FROM layoffs_staging2;
 UPDATE layoffs_staging2
 SET `date` = STR_TO_DATE(`date`, '%m/%d/%Y');
 
--- jeżeli daliśmy kolumnie date poprawny format to dopiero teraz możemy zmienić dla kolumny date format z text na date
+-- If the date column has correct format, only now I can change the date column format from "text" to "date".
 
 ALTER TABLE layoffs_staging2
 MODIFY COLUMN `date` DATE;
 
 
--- teraz będziemy walczyć z NULL i pustymi kolumnami
+-- 3. Null vlues or blank values
 
 SELECT *
 FROM layoffs_staging2
@@ -141,7 +143,7 @@ WHERE industry IS NULL
 OR industry = ''
 ORDER BY industry;
 
--- now we need to populate those nulls if possible
+-- I need to populate those nulls if possible
 
 UPDATE layoffs_staging2 t1
 JOIN layoffs_staging2 t2
@@ -163,18 +165,18 @@ WHERE company = 'Airbnb';
 
 SELECT *
 FROM layoffs_staging2
-WHERE company LIKE 'Ball%' -- zostawiamy bo jest tylko jedna taka firma więc nie wiemy co moglibyśmy tu dać.
+WHERE company LIKE 'Ball%' -- I decidet to leave it because there is only one such company so we don't know what we could put here.
 ;
 
 
--- usówanie wierszy i kolumn
+-- 4. Remove any columns or rows that are no use for gathering information
 
 SELECT *
 FROM layoffs_staging2
 WHERE total_laid_off IS NULL
 AND percentage_laid_off IS NULL;
 
--- mamy dużo wierszy gdzie obie kolumny są NULL. Chyba nie będą to wartościowe dane więc postanowiliśmy je usunąć
+-- There are many rows where both columns are NULL. I don't think this data will be valuable, so I decided to delete it.
 
 DELETE
 FROM layoffs_staging2
@@ -184,10 +186,7 @@ AND percentage_laid_off IS NULL;
 SELECT *
 FROM layoffs_staging2;
 
--- nie potrzebujemy już stworzonego wcześniej row_num na podstawie którego szukaliśmy duplikatów
+-- I no longer need the previously created row_num, which we used to search for duplicates, so I delete the column
 
 ALTER TABLE layoffs_staging2
 DROP COLUMN row_num;
-
--- KONIEC
--- BRAWO MY!
